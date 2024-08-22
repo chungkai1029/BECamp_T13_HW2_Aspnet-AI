@@ -7,7 +7,8 @@ using BECamp_T13_HW2_Aspnet_AI.Models;
 using BECamp_T13_HW2_Aspnet_AI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration["MySQL:BECampT13HW2"] ?? throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
+var configuration = builder.Configuration;
+var connectionString = configuration["MySQL:BECampT13HW2"] ?? throw new InvalidOperationException("Connection string 'UserContextConnection' not found.");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -35,6 +36,14 @@ builder.Services.Configure<Email>(builder.Configuration.GetSection("Email"));
 
 // Use Interface to achieve dependency injection.
 builder.Services.AddScoped<IAIServices, OpenAIServices>();
+
+builder.Services.AddAuthentication()
+    .AddGoogle(options => 
+    {
+        IConfigurationSection googleAuthSection = configuration.GetSection("Authentication:Google");
+        options.ClientId = googleAuthSection["ClientId"];
+        options.ClientSecret = googleAuthSection["ClientSecret"];
+    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
