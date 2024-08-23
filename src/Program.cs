@@ -37,12 +37,20 @@ builder.Services.Configure<Email>(builder.Configuration.GetSection("Email"));
 // Use Interface to achieve dependency injection.
 builder.Services.AddScoped<IAIServices, OpenAIServices>();
 
+// To require multiple authentication providers.
 builder.Services.AddAuthentication()
-    .AddGoogle(options => 
+    .AddGoogle(options =>
     {
         IConfigurationSection googleAuthSection = configuration.GetSection("Authentication:Google");
-        options.ClientId = googleAuthSection["ClientId"];
-        options.ClientSecret = googleAuthSection["ClientSecret"];
+        options.ClientId = googleAuthSection["ClientId"] ?? throw new InvalidOperationException("Google Authentication 'ClientId' not found.");
+        options.ClientSecret = googleAuthSection["ClientSecret"] ?? throw new InvalidOperationException("Google Authentication 'ClientSecret' not found."); ;
+    })
+    .AddFacebook(options =>
+    {
+        IConfigurationSection facebookAuthSection = configuration.GetSection("Authentication:Facebook");
+        options.ClientId = facebookAuthSection["AppId"] ?? throw new InvalidOperationException("Facebook Authentication 'AppId' not found.");
+        options.ClientSecret = facebookAuthSection["AppSecret"] ?? throw new InvalidOperationException("Facebook Authentication 'AppSecret' not found.");
+        options.AccessDeniedPath = "/AccessDeniedPathInfo";
     });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -111,7 +119,7 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-    
+
 app.MapRazorPages();
 
 app.Run();
